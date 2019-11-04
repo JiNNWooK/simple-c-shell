@@ -17,3 +17,9 @@ Features
 * Background execution of programs with `&`
 * Piping implemented (`<cmd1> | <cmd2>`) via `pipe` and `dup2` syscalls. Multiple piping is allowed.
 * SIGINT signal when Ctrl-C is pressed (shell is not exited)
+---
+Hongik UNIV. CIC 
+OpenSource Class Team Project
+Contributor
+> Jin-Wook CHOI
+> Soo Hyuck CHOI

@@ -95,6 +95,7 @@ void welcomeScreen(){
         printf("\t--------------------------------------------\n");
         printf("\t             Licensed under GPLv3:\n");
         printf("\t============================================\n");
+	printf("\t             OpenSource Project\n");
         printf("\n\n");
 }
 
