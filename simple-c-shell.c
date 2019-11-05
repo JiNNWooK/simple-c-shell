@@ -16,7 +16,13 @@
   * You should have received a copy of the GNU General Public License
   * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+/*
+This space is where we write down what we modified, removed or added.
+ex)
+2019.11.05 add Easter Egg show Team Member 
 
+
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -469,6 +475,15 @@ int commandHandler(char * args[]){
 	
 	// 'exit' command quits the shell
 	if(strcmp(args[0],"exit") == 0) exit(0);
+	//Easter Egg : input team or Team show Open Source Team Project Member
+	//2019.11.05
+	else if (strcmp(args[0],"Team")==0||strcmp(args[0],"team")==0){
+		printf("\t====================\n");
+		printf("\tB589077 Jin-Wook CHOI\n");
+		printf("\t----------------------\n");
+		printf("\tB589075 Soo-Hyuck CHOI\n");
+		printf("\t=======================\n");
+	}
 	// 'pwd' command prints the current directory
  	else if (strcmp(args[0],"pwd") == 0){
 		if (args[j] != NULL){
