@@ -34,6 +34,8 @@ ex)
 #include <fcntl.h>
 #include <termios.h>
 #include "util.h"
+#include <sys/stat.h>
+
 
 #define LIMIT 256 // command에 대한 최대 토큰 수.
 #define MAXLINE 1024 // user input의 최대 문자 수.
@@ -481,6 +483,15 @@ int commandHandler(char * args[]){
 		printf("\tB589075 Soo-Hyuck CHOI\n");
 		printf("\t=======================\n");
 	}
+	//2019.12.06
+	else if(strcmp(args[0],"rm")==0){
+		char ans;
+		printf("Are U sure delect?[y/n] : ");
+		scanf("%c",&ans);
+		if(ans=='y'){
+			unlink(args[1]);
+		}
+	}
 
 	// 'pwd' command는 현재 디랙토리를 print.
  	else if (strcmp(args[0],"pwd") == 0){
@@ -629,8 +640,10 @@ int main(int argc, char *argv[], char ** envp) {
 		
 		// input의 모든 토큰을 읽고 그것을 commandHandler에게 argument로 전달한다.
 		numTokens = 1;
-		while((tokens[numTokens] = strtok(NULL, " \n\t")) != NULL) numTokens++;
+		while((tokens[numTokens] = strtok(NULL, " \n\t")) != NULL){ 
+			numTokens++;}
 		
+	//	printf(tokens);
 		commandHandler(tokens);
 		
 	}          
