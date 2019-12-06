@@ -16,6 +16,7 @@
   * You should have received a copy of the GNU General Public License
   * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 /*
 This space is where we write down what we modified, removed or added.
 ex)
@@ -34,30 +35,30 @@ ex)
 #include <termios.h>
 #include "util.h"
 
-#define LIMIT 256 // max number of tokens for a command
-#define MAXLINE 1024 // max number of characters from user input
+#define LIMIT 256 // command에 대한 최대 토큰 수.
+#define MAXLINE 1024 // user input의 최대 문자 수.
 
 /**
- * Function used to initialize our shell. We used the approach explained in
+ * shell을 초기화하는 데 사용되며, 설명 된 접근법을 사용했다.
  * http://www.gnu.org/software/libc/manual/html_node/Initializing-the-Shell.html
  */
 void init(){
-		// See if we are running interactively
+		// interactive로 실행 중인지 확인
         GBSH_PID = getpid();
-        // The shell is interactive if STDIN is the terminal  
+        // STDIN이 터미널인 경우 shell은 interactive다.
         GBSH_IS_INTERACTIVE = isatty(STDIN_FILENO);  
 
 		if (GBSH_IS_INTERACTIVE) {
-			// Loop until we are in the foreground
+			// foreground까지 반복
 			while (tcgetpgrp(STDIN_FILENO) != (GBSH_PGID = getpgrp()))
 					kill(GBSH_PID, SIGTTIN);             
 	              
 	              
-	        // Set the signal handlers for SIGCHILD and SIGINT
+	        // SIGCHILD 와 SIGINT에 대한 시그널 핸들러 설정
 			act_child.sa_handler = signalHandler_child;
 			act_int.sa_handler = signalHandler_int;			
 			
-			/**The sigaction structure is defined as something like
+			/**sigaction의 구조는 다음과 같다.
 			
 			struct sigaction {
 				void (*sa_handler)(int);
@@ -71,20 +72,22 @@ void init(){
 			sigaction(SIGCHLD, &act_child, 0);
 			sigaction(SIGINT, &act_int, 0);
 			
-			// Put ourselves in our own process group
-			setpgid(GBSH_PID, GBSH_PID); // we make the shell process the new process group leader
+			/* 자체 프로세스 그훕에 참여
+			 * shell 프로세스를 새로운 프로세스 스룹 리더로 만든다
+			 */
+			setpgid(GBSH_PID, GBSH_PID);
 			GBSH_PGID = getpgrp();
 			if (GBSH_PID != GBSH_PGID) {
 					printf("Error, the shell is not process group leader");
 					exit(EXIT_FAILURE);
 			}
-			// Grab control of the terminal
+			// 터미널 제어
 			tcsetpgrp(STDIN_FILENO, GBSH_PGID);  
 			
-			// Save default terminal attributes for shell
+			// shell의 기본 터미널 속성 저장
 			tcgetattr(STDIN_FILENO, &GBSH_TMODES);
 
-			// Get the current directory that will be used in different methods
+			// 다른methods로 사용될 현재 디랙토리를 얻는다.
 			currentDirectory = (char*) calloc(1024, sizeof(char));
         } else {
                 printf("Could not make the shell interactive.\n");
@@ -93,7 +96,7 @@ void init(){
 }
 
 /**
- * Method used to print the welcome screen of our shell
+ * shell의 시작 회면을 인쇄하는 데 사용되는 method
  */
 void welcomeScreen(){
         printf("\n\t============================================\n");
@@ -113,9 +116,10 @@ void welcomeScreen(){
  * signal handler for SIGCHLD
  */
 void signalHandler_child(int p){
-	/* Wait for all dead processes.
-	 * We use a non-blocking call (WNOHANG) to be sure this signal handler will not
-	 * block if a child was cleaned up in another part of the program. */
+	/* 모든 죽은 프로세스를 기다린다.
+	 * 프로그램의 다른 부분에서 child를 cleaned up 할 결우 이 Signal handler가
+	 * 차단되지 않는지 확인하기 위해 non-blocking call(WNOHANG)을 사용한다.
+	 */
 	while (waitpid(-1, NULL, WNOHANG) > 0) {
 	}
 	printf("\n");
@@ -135,26 +139,27 @@ void signalHandler_int(int p){
 }
 
 /**
- *	Displays the prompt for the shell
+ *	shell prompt를 표시한다.
  */
 void shellPrompt(){
-	// We print the prompt in the form "<user>@<host> <cwd> >"
+	// prompt 를"<user>@<host> <cwd> >"형식으로 인쇄한다.
 	char hostn[1204] = "";
 	gethostname(hostn, sizeof(hostn));
 	printf("%s@%s %s > ", getenv("LOGNAME"), hostn, getcwd(currentDirectory, 1024));
 }
 
 /**
- * Method to change directory
+ * 디랙토리 변경 Method
  */
 int changeDirectory(char* args[]){
-	// If we write no path (only 'cd'), then go to the home directory
+	// 경로(path)를 쓰지 않으면('cd'만 해당) 홈 디랙토리로 이동
 	if (args[1] == NULL) {
 		chdir(getenv("HOME")); 
 		return 1;
 	}
-	// Else we change the directory to the one specified by the 
-	// argument, if possible
+	/* 아니면..
+	 * 가능하다면 우리는 디랙토리를 argument에 의해 지정된 디렉토리로 바꾼다.
+	 */
 	else{ 
 		if (chdir(args[1]) == -1) {
 			printf(" %s: no such directory\n", args[1]);
@@ -165,42 +170,40 @@ int changeDirectory(char* args[]){
 }
 
 /**
- * Method used to manage the environment variables with different
- * options
+ * 다양한 옵션을 사용하여 환경 변수를 관리하는 데 사용되는  Method
  */ 
 int manageEnviron(char * args[], int option){
 	char **env_aux;
 	switch(option){
-		// Case 'environ': we print the environment variables along with
-		// their values
+		// Case 'environ': 환경변수와 그들의 values를 함께 print
 		case 0: 
 			for(env_aux = environ; *env_aux != 0; env_aux ++){
 				printf("%s\n", *env_aux);
 			}
 			break;
-		// Case 'setenv': we set an environment variable to a value
+		// Case 'setenv': 환경변수를 value로 설정
 		case 1: 
 			if((args[1] == NULL) && args[2] == NULL){
 				printf("%s","Not enought input arguments\n");
 				return -1;
 			}
 			
-			// We use different output for new and overwritten variables
+			// 새로운 변수와 덮어 쓴 변수에 다른 output 사용한다.
 			if(getenv(args[1]) != NULL){
 				printf("%s", "The variable has been overwritten\n");
 			}else{
 				printf("%s", "The variable has been created\n");
 			}
 			
-			// If we specify no value for the variable, we set it to ""
+			// 변수에 value을 지정하지 않으 면""로 설정한다.
 			if (args[2] == NULL){
 				setenv(args[1], "", 1);
-			// We set the variable to the given value
+			// 주어진 value로 변수를 설정한다.
 			}else{
 				setenv(args[1], args[2], 1);
 			}
 			break;
-		// Case 'unsetenv': we delete an environment variable
+		// Case 'unsetenv': 환경 변수를 삭제한다.
 		case 2:
 			if(args[1] == NULL){
 				printf("%s","Not enought input arguments\n");
@@ -220,8 +223,7 @@ int manageEnviron(char * args[], int option){
 }
  
 /**
-* Method for launching a program. It can be run in the background
-* or in the foreground
+* 프로그램 시작  method로, background나 foreground에서 실행될 수 있다.
 */ 
 void launchProg(char **args, int background){	 
 	 int err = -1;
@@ -230,46 +232,45 @@ void launchProg(char **args, int background){
 		 printf("Child process could not be created\n");
 		 return;
 	 }
-	 // pid == 0 implies the following code is related to the child process
+	 // pid == 0 은 다음 코드가 child 프로세스와 관련이 있음을 나타낸다.
 	if(pid==0){
-		// We set the child to ignore SIGINT signals (we want the parent
-		// process to handle them with signalHandler_int)	
+		/*child가 'SIGINT' signals를 무시하도록 설정했다.
+		 * (parent 프로세스가 그들을 signalHandler_int로 처리하기를 원한다.)
+		 */
 		signal(SIGINT, SIG_IGN);
 		
-		// We set parent=<pathname>/simple-c-shell as an environment variable
-		// for the child
+		// child를 위해  parent=<pathname>/simple-c-shell를 환경변수로 설정.
 		setenv("parent",getcwd(currentDirectory, 1024),1);	
 		
-		// If we launch non-existing commands we end the process
+		// 존재하지 않은 command 실행 시 프로세스가 종료됨.
 		if (execvp(args[0],args)==err){
 			printf("Command not found");
 			kill(getpid(),SIGTERM);
 		}
 	 }
 	 
-	 // The following will be executed by the parent
+	 // parent가 다음을 실행한다.
 	 
-	 // If the process is not requested to be in background, we wait for
-	 // the child to finish.
+	 // 프로세스가 background에서 요처청되지 않은 경우 child가 끝나기를 기다린다.
 	 if (background == 0){
 		 waitpid(pid,NULL,0);
 	 }else{
-		 // In order to create a background process, the current process
-		 // should just skip the call to wait. The SIGCHILD handler
-		 // signalHandler_child will take care of the returning values
-		 // of the childs.
+		 /* background 프로세스를 생성하려면 현재 프로세스는 대기하기 위해
+		  * 호출을 건너뛰어야 한다. SIGCHILD handler인 'signalHandler-child'는
+		  * child의 return value를 처리한다.
+		  */
 		 printf("Process created with PID: %d\n",pid);
 	 }	 
 }
  
 /**
-* Method used to manage I/O redirection
+* I/O redirection에 사용되는 method
 */ 
 void fileIO(char * args[], char* inputFile, char* outputFile, int option){
 	 
 	int err = -1;
 	
-	int fileDescriptor; // between 0 and 19, describing the output or input file
+	int fileDescriptor; // 0~19 사이, output 또는 input파일 설명.
 	
 	if((pid=fork())==-1){
 		printf("Child process could not be created\n");
@@ -278,19 +279,19 @@ void fileIO(char * args[], char* inputFile, char* outputFile, int option){
 	if(pid==0){
 		// Option 0: output redirection
 		if (option == 0){
-			// We open (create) the file truncating it at 0, for write only
+			// 파일을 0에서 truncating해 쓰기 전용으로 열기(create)
 			fileDescriptor = open(outputFile, O_CREAT | O_TRUNC | O_WRONLY, 0600); 
-			// We replace de standard output with the appropriate file
+			// 표준 output을 적절한 파일로 바꾼다.
 			dup2(fileDescriptor, STDOUT_FILENO); 
 			close(fileDescriptor);
 		// Option 1: input and output redirection
 		}else if (option == 1){
-			// We open file for read only (it's STDIN)
+			// 파일을 읽기 전용으로 연다 (it's STDIN).
 			fileDescriptor = open(inputFile, O_RDONLY, 0600);  
-			// We replace de standard input with the appropriate file
+			// 표준 input을 적절한 파일로 바꾼다.
 			dup2(fileDescriptor, STDIN_FILENO);
 			close(fileDescriptor);
-			// Same as before for the output file
+			// output 파일과 동일함.
 			fileDescriptor = open(outputFile, O_CREAT | O_TRUNC | O_WRONLY, 0600);
 			dup2(fileDescriptor, STDOUT_FILENO);
 			close(fileDescriptor);		 
@@ -307,7 +308,7 @@ void fileIO(char * args[], char* inputFile, char* outputFile, int option){
 }
 
 /**
-* Method used to manage pipes.
+* 파이프 관리에 사용되는 method
 */ 
 void pipeHandler(char * args[]){
 	// File descriptors
@@ -323,14 +324,13 @@ void pipeHandler(char * args[]){
 	int err = -1;
 	int end = 0;
 	
-	// Variables used for the different loops
+	// 다른 루프에 사용되는 변수들
 	int i = 0;
 	int j = 0;
 	int k = 0;
 	int l = 0;
 	
-	// First we calculate the number of commands (they are separated
-	// by '|')
+	// 먼저 command 수를 계산한다( command들은'|' 로 구분되어있다).
 	while (args[l] != NULL){
 		if (strcmp(args[l],"|") == 0){
 			num_cmds++;
@@ -339,35 +339,33 @@ void pipeHandler(char * args[]){
 	}
 	num_cmds++;
 	
-	// Main loop of this method. For each command between '|', the
-	// pipes will be configured and standard input and/or output will
-	// be replaced. Then it will be executed
+	/*이 method의 메인 루프.
+	 * '|'사이의 각 command에 대해 파이프가 구성되고 표준 input, output이 교체된다.
+	 * 그런 다음 이것은 실핼될 것이다.
+	 */
 	while (args[j] != NULL && end != 1){
 		k = 0;
-		// We use an auxiliary array of pointers to store the command
-		// that will be executed on each iteration
+		// 각 반복(iteration) 에서 실행될 command를 저장하기 위해 보조 포인터 배열을 사용
 		while (strcmp(args[j],"|") != 0){
 			command[k] = args[j];
 			j++;	
 			if (args[j] == NULL){
-				// 'end' variable used to keep the program from entering
-				// again in the loop when no more arguments are found
+				// 더 이상의 arguments를 찾을 수 없을 떄, 프로그램이 루프에서
+				// 다시 입력되지않도록 하는 'end'변수
 				end = 1;
 				k++;
 				break;
 			}
 			k++;
 		}
-		// Last position of the command will be NULL to indicate that
-		// it is its end when we pass it to the exec function
+		// command의 마지막 위치는NULL이며, exec함수에 전달할 때 끝임을 나타낸다.
 		command[k] = NULL;
 		j++;		
 		
-		// Depending on whether we are in an iteration or another, we
-		// will set different descriptors for the pipes inputs and
-		// output. This way, a pipe will be shared between each two
-		// iterations, enabling us to connect the inputs and outputs of
-		// the two different commands.
+		/*반복 중인지 아닌지에 따라 파이프 input, output에 대해 서로 다른 디스크립터를
+		 * 설정할 것이다. 이렇게 하면 하이프가 각 두 반복(iteration) 사이에 공유되어
+		 * 서로 다른 두 command의 input과 output을 연결 할 수 있게 된다.
+		 */
 		if (i % 2 != 0){
 			pipe(filedes); // for odd i
 		}else{
@@ -388,25 +386,24 @@ void pipeHandler(char * args[]){
 			return;
 		}
 		if(pid==0){
-			// If we are in the first command
+			// 우리가 first command에 있다면..
 			if (i == 0){
 				dup2(filedes2[1], STDOUT_FILENO);
 			}
-			// If we are in the last command, depending on whether it
-			// is placed in an odd or even position, we will replace
-			// the standard input for one pipe or another. The standard
-			// output will be untouched because we want to see the 
-			// output in the terminal
+			/*만약 우리가 마지막 command에 있다면, 그것이 odd인지 even인지에 따라,
+			 * 우리는 한 파이프 또는 다른 파이프에 대한 표준 input을 교체할 것이다.
+			 * 터미널에서 output을 보고 싶기 때문에 표준 output은 손대지 않을 것이다.
+			 */
 			else if (i == num_cmds - 1){
 				if (num_cmds % 2 != 0){ // for odd number of commands
 					dup2(filedes[0],STDIN_FILENO);
 				}else{ // for even number of commands
 					dup2(filedes2[0],STDIN_FILENO);
 				}
-			// If we are in a command that is in the middle, we will
-			// have to use two pipes, one for input and another for
-			// output. The position is also important in order to choose
-			// which file descriptor corresponds to each input/output
+			/*중간에 있는 command라면 input용 파이프와 output용 파이프를 각각 2개씩
+			 * 사용해야 할 것이다. 각 input/output에 해당하는 파일 디스크립터를 선택
+			 * 하려면 위치도 중요하다.
+			 */
 			}else{ // for odd i
 				if (i % 2 != 0){
 					dup2(filedes2[0],STDIN_FILENO); 
@@ -422,7 +419,7 @@ void pipeHandler(char * args[]){
 			}		
 		}
 				
-		// CLOSING DESCRIPTORS ON PARENT
+		// PARENT의 설명자 닫기
 		if (i == 0){
 			close(filedes2[1]);
 		}
@@ -449,7 +446,7 @@ void pipeHandler(char * args[]){
 }
 			
 /**
-* Method used to handle the commands entered via the standard input
+* 표준 input 'via'로 입력(entered)된 command를 처리(handle)하는 데 사용되는 method
 */ 
 int commandHandler(char * args[]){
 	int i = 0;
@@ -463,8 +460,7 @@ int commandHandler(char * args[]){
 	
 	char *args_aux[256];
 	
-	// We look for the special characters and separate the command itself
-	// in a new array for the arguments
+	// 우리는special characters 를 찾고 arguments를 위해 새로운 배열로 command 자체를 분리.
 	while ( args[j] != NULL){
 		if ( (strcmp(args[j],">") == 0) || (strcmp(args[j],"<") == 0) || (strcmp(args[j],"&") == 0)){
 			break;
@@ -473,8 +469,9 @@ int commandHandler(char * args[]){
 		j++;
 	}
 	
-	// 'exit' command quits the shell
+	// 'exit' command는 shell을 종료한다.
 	if(strcmp(args[0],"exit") == 0) exit(0);
+
 	//Easter Egg : input team or Team show Open Source Team Project Member
 	//2019.11.05
 	else if (strcmp(args[0],"Team")==0||strcmp(args[0],"team")==0){
@@ -484,14 +481,15 @@ int commandHandler(char * args[]){
 		printf("\tB589075 Soo-Hyuck CHOI\n");
 		printf("\t=======================\n");
 	}
-	// 'pwd' command prints the current directory
+
+	// 'pwd' command는 현재 디랙토리를 print.
  	else if (strcmp(args[0],"pwd") == 0){
 		if (args[j] != NULL){
-			// If we want file output
+			// file output을 원한다면.
 			if ( (strcmp(args[j],">") == 0) && (args[j+1] != NULL) ){
 				fileDescriptor = open(args[j+1], O_CREAT | O_TRUNC | O_WRONLY, 0600); 
-				// We replace de standard output with the appropriate file
-				standardOut = dup(STDOUT_FILENO); 	// first we make a copy of stdout
+				// 표준 output을 적절한 파일로 바꾼다/
+				standardOut = dup(STDOUT_FILENO); 	// 먼저, stdout의 사본을 만든다.
 													// because we'll want it back
 				dup2(fileDescriptor, STDOUT_FILENO); 
 				close(fileDescriptor);
@@ -502,18 +500,20 @@ int commandHandler(char * args[]){
 			printf("%s\n", getcwd(currentDirectory, 1024));
 		}
 	} 
- 	// 'clear' command clears the screen
+ 	// 'clear' command 는 화면을 지운다.
 	else if (strcmp(args[0],"clear") == 0) system("clear");
-	// 'cd' command to change directory
+
+	// 'cd' command 는 디랙토리를 변경한다.
 	else if (strcmp(args[0],"cd") == 0) changeDirectory(args);
-	// 'environ' command to list the environment variables
+
+	// 'environ' command 는 환경 변수를 나열한다.
 	else if (strcmp(args[0],"environ") == 0){
 		if (args[j] != NULL){
-			// If we want file output
+			// file output을 원한다면.
 			if ( (strcmp(args[j],">") == 0) && (args[j+1] != NULL) ){
 				fileDescriptor = open(args[j+1], O_CREAT | O_TRUNC | O_WRONLY, 0600); 
-				// We replace de standard output with the appropriate file
-				standardOut = dup(STDOUT_FILENO); 	// first we make a copy of stdout
+				// 표준 output을 적절한 파일로 바꾼다.
+				standardOut = dup(STDOUT_FILENO); 	// 먼저 stdout의 사본을 만든다.
 													// because we'll want it back
 				dup2(fileDescriptor, STDOUT_FILENO); 
 				close(fileDescriptor);
@@ -524,28 +524,26 @@ int commandHandler(char * args[]){
 			manageEnviron(args,0);
 		}
 	}
-	// 'setenv' command to set environment variables
+	// 'setenv' command 는 환경 변수를 설정한다.
 	else if (strcmp(args[0],"setenv") == 0) manageEnviron(args,1);
-	// 'unsetenv' command to undefine environment variables
+
+	// 'unsetenv' command 는 환경 변수를 정의하지 않는다.
 	else if (strcmp(args[0],"unsetenv") == 0) manageEnviron(args,2);
 	else{
-		// If none of the preceding commands were used, we invoke the
-		// specified program. We have to detect if I/O redirection,
-		// piped execution or background execution were solicited
+		// 앞의 command가 하나도 사용되지 않은 경우, 지정된 프로그램을 호출한다.
+		// I/O 리디랙션, 파이프 실행 또는 background 실행이 요청되었는지를 
+		// 감지해야 한다.
 		while (args[i] != NULL && background == 0){
-			// If background execution was solicited (last argument '&')
-			// we exit the loop
+			// background 실행을 요청하면 (last argument'&') 루프를 종료한다.
 			if (strcmp(args[i],"&") == 0){
 				background = 1;
-			// If '|' is detected, piping was solicited, and we call
-			// the appropriate method that will handle the different
-			// executions
+			// '|' 인 경우 pipe가 감지되어 다른 실행을 처리할 수 있는 적절한
+			// 방법을 call한다.
 			}else if (strcmp(args[i],"|") == 0){
 				pipeHandler(args);
 				return 1;
-			// If '<' is detected, we have Input and Output redirection.
-			// First we check if the structure given is the correct one,
-			// and if that is the case we call the appropriate method
+			// '<'가 감지되면 I/O 리디랙션이 있는데, 먼저 주어진 structure가
+			// 올바른 structure인지 확인하고, 그렇다면 적절한 method를 call한다.
 			}else if (strcmp(args[i],"<") == 0){
 				aux = i+1;
 				if (args[aux] == NULL || args[aux+1] == NULL || args[aux+2] == NULL ){
@@ -560,9 +558,9 @@ int commandHandler(char * args[]){
 				fileIO(args_aux,args[i+1],args[i+3],1);
 				return 1;
 			}
-			// If '>' is detected, we have output redirection.
-			// First we check if the structure given is the correct one,
-			// and if that is the case we call the appropriate method
+			// '<'가 감지되면 output 리디랙션이 있는데, 먼저 주어진 structure가
+                        // 올바른 structure인지 확인하고, 그렇다면 적절한 method를 call한다.
+
 			else if (strcmp(args[i],">") == 0){
 				if (args[i+1] == NULL){
 					printf("Not enough input arguments\n");
@@ -573,14 +571,13 @@ int commandHandler(char * args[]){
 			}
 			i++;
 		}
-		// We launch the program with our method, indicating if we
-		// want background execution or not
+		// method를 사용하여 background 실행 여부를 나타배는 프로그램 실행
 		args_aux[i] = NULL;
 		launchProg(args_aux,background);
 		
 		/**
-		 * For the part 1.e, we only had to print the input that was not
-		 * 'exit', 'pwd' or 'clear'. We did it the following way
+		 * part 1.e의 경우, 'exit', 'pwd'또는 'clear'가 아닌 input만 print하면 되었다.
+		 * 다음과 같은 방법으로 이를 구현하였다.
 		 */
 		//	i = 0;
 		//	while(args[i]!=NULL){
@@ -593,47 +590,44 @@ return 1;
 
 
 /**
-* Main method of our shell
+* shell의 메인 method
 */ 
 int main(int argc, char *argv[], char ** envp) {
-	char line[MAXLINE]; // buffer for the user input
-	char * tokens[LIMIT]; // array for the different tokens in the command
+	char line[MAXLINE]; // user input을 위한 버퍼
+	char * tokens[LIMIT]; // command에서 다른 토큰에 대한 배열
 	int numTokens;
 		
-	no_reprint_prmpt = 0; 	// to prevent the printing of the shell
-							// after certain methods
-	pid = -10; // we initialize pid to an pid that is not possible
+	no_reprint_prmpt = 0; 	// shell이 print되지 않도록
+							// 특정 method 이후
+	pid = -10; // 불가능한 pid로 pid를 초기화한다.
 	
-	// We call the method of initialization and the welcome screen
+	// 초기화 method와 시작 화면 호출
 	init();
 	welcomeScreen();
     
-    // We set our extern char** environ to the environment, so that
-    // we can treat it later in other methods
+    // extern char** environ을 environment에 설정하여
+    // 나중에 다른 method로 처리 할 수 있다.
 	environ = envp;
 	
-	// We set shell=<pathname>/simple-c-shell as an environment variable for
-	// the child
+	// shell=<pathname>/simple-c-shell 을 child의 환경 변수로 설정했다.
 	setenv("shell",getcwd(currentDirectory, 1024),1);
 	
-	// Main loop, where the user input will be read and the prompt
-	// will be printed
+	// user의 input을 읽고 prompt가 print되는 메인 루프
 	while(TRUE){
-		// We print the shell prompt if necessary
+		// 필요한 경우 shell prompt를 print
 		if (no_reprint_prmpt == 0) shellPrompt();
 		no_reprint_prmpt = 0;
 		
-		// We empty the line buffer
+		// 라인 버퍼를 비운다.
 		memset ( line, '\0', MAXLINE );
 
-		// We wait for user input
+		// user input을 기다린다.
 		fgets(line, MAXLINE, stdin);
 	
-		// If nothing is written, the loop is executed again
+		// 아무것도 쓰지 않으면, 루프가 다시 실
 		if((tokens[0] = strtok(line," \n\t")) == NULL) continue;
 		
-		// We read all the tokens of the input and pass it to our
-		// commandHandler as the argument
+		// input의 모든 토큰을 읽고 그것을 commandHandler에게 argument로 전달한다.
 		numTokens = 1;
 		while((tokens[numTokens] = strtok(NULL, " \n\t")) != NULL) numTokens++;
 		
@@ -643,3 +637,4 @@ int main(int argc, char *argv[], char ** envp) {
 
 	exit(0);
 }
+
