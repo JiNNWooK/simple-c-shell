@@ -592,6 +592,30 @@ int commandHandler(int argc,char * args[]){
 			ls(args[1],args[2]);
 		}
 	}
+
+	//2019.12.08
+        //'mkdir' command
+        else if(strcmp(args[0],"mkdc")==0){
+                if(argc<2){
+                        printf("\x1b[31m Enter a directory name");
+                        printf("\x1b[0m \n");
+                }else{
+
+                        printf("\x1b[31m Do you want to change the directory?[Y/N] \x1b[0m");
+                        scanf("%c",&ans);
+
+                        if(ans=='n'){
+                                mkdir(args[1],0755);
+                                printf("Success mkdir\n");
+                        }else
+                        {
+                                mkdir(args[1],0755);
+                                changeDirectory(args);
+                                printf("Success mkdir & cd");
+                        }
+                }
+        }
+
 	// 'pwd' command는 현재 디랙토리를 print.
  	else if (strcmp(args[0],"pwd") == 0){
 		if (args[j] != NULL){
