@@ -20,8 +20,11 @@
 /*
 This space is where we write down what we modified, removed or added.
 ex)
-2019.11.05 add Easter Egg show Team Member 
-
+2019.11.05 add Easter Egg show Team Member  -  By JW.CHOI
+2019.12.07 modify comment Eng to Kor -  By SH.CHOI 
+2019.12.07 add command rm and show Warnings  -  By JW.CHOI & SH.SHOI
+2019.12.07 add command rmdir and show Warnings  -  By SH.CHOI & JW.CHOI
+2019.12.07 add command mv  - By JW.CHOI
 
 */
 #include <stdio.h>
@@ -35,7 +38,7 @@ ex)
 #include <termios.h>
 #include "util.h"
 #include <sys/stat.h>
-
+#include <dirent.h>
 
 #define LIMIT 256 // command에 대한 최대 토큰 수.
 #define MAXLINE 1024 // user input의 최대 문자 수.
@@ -97,6 +100,26 @@ void init(){
         }
 }
 
+void move(int argc, char* argv[]){
+    int fd1,fd2;
+    int r_size,w_size;
+    char buf[100];
+    fd1 = open(argv[1], O_RDONLY);
+    fd2 = open(argv[2], O_RDWR|O_CREAT|O_EXCL, 0664);
+   
+    r_size = read(fd1,buf,100);
+    w_size = write(fd2,buf,r_size);
+    while(r_size == 100)
+    {
+        r_size=read(fd1,buf,100);
+        w_size=write(fd2,buf,r_size);
+    }
+
+    unlink(argv[1]);
+ 
+
+}
+
 /**
  * shell의 시작 회면을 인쇄하는 데 사용되는 method
  */
@@ -147,7 +170,7 @@ void shellPrompt(){
 	// prompt 를"<user>@<host> <cwd> >"형식으로 인쇄한다.
 	char hostn[1204] = "";
 	gethostname(hostn, sizeof(hostn));
-	printf("%s@%s %s > ", getenv("LOGNAME"), hostn, getcwd(currentDirectory, 1024));
+	printf("\n%s@%s %s > ", getenv("LOGNAME"), hostn, getcwd(currentDirectory, 1024));
 }
 
 /**
@@ -450,7 +473,7 @@ void pipeHandler(char * args[]){
 /**
 * 표준 input 'via'로 입력(entered)된 command를 처리(handle)하는 데 사용되는 method
 */ 
-int commandHandler(char * args[]){
+int commandHandler(int argc,char * args[]){
 	int i = 0;
 	int j = 0;
 	
@@ -461,7 +484,8 @@ int commandHandler(char * args[]){
 	int background = 0;
 	
 	char *args_aux[256];
-	
+	char ans='\0';
+
 	// 우리는special characters 를 찾고 arguments를 위해 새로운 배열로 command 자체를 분리.
 	while ( args[j] != NULL){
 		if ( (strcmp(args[j],">") == 0) || (strcmp(args[j],"<") == 0) || (strcmp(args[j],"&") == 0)){
@@ -484,15 +508,54 @@ int commandHandler(char * args[]){
 		printf("\t=======================\n");
 	}
 	//2019.12.06
+	//'rm' command
 	else if(strcmp(args[0],"rm")==0){
-		char ans;
-		printf("Are U sure delect?[y/n] : ");
-		scanf("%c",&ans);
-		if(ans=='y'){
-			unlink(args[1]);
+		if(argc==1){
+			printf("Not Select file\n");
+		}else{
+			printf("Are U sure delete File? [y/n] : ");
+			scanf("%c",&ans);
+			if(ans=='y'){
+				int result=unlink(args[1]);
+				if(result==0){
+					printf("\nSucces File Remove\n");
+					system("ls");
+				}else printf("Can't remove Dir\n");
+			}
 		}
 	}
 
+	//2019.12.07 
+	//'rmdir' command
+	else if(strcmp(args[0],"rmdir")==0){
+		if(argc==1){
+			printf("Not Select Directory\n");
+		}else{ 
+			
+			printf("Are U sure delete Dir? [y/n] : ");
+			scanf("%c",&ans);
+			if(ans=='y'){
+				remove(args[1]);
+				printf("Succes Dir Remove\n");
+				system("ls");
+			}
+		}
+	}
+	//2019.12.07
+	//'mv' command
+	else if(strcmp(args[0],"mv")==0){
+		char *token[2];
+		if (argc!=2){
+			printf("Not Move File\n");
+		}
+		else{
+			token[0]=args[1];
+			token[1]=args[2];
+		}
+		move(2,token);
+
+	
+	}
 	// 'pwd' command는 현재 디랙토리를 print.
  	else if (strcmp(args[0],"pwd") == 0){
 		if (args[j] != NULL){
@@ -643,8 +706,8 @@ int main(int argc, char *argv[], char ** envp) {
 		while((tokens[numTokens] = strtok(NULL, " \n\t")) != NULL){ 
 			numTokens++;}
 		
-	//	printf(tokens);
-		commandHandler(tokens);
+		//printf("%d\n",numTokens);
+		commandHandler(numTokens,tokens);
 		
 	}          
 
