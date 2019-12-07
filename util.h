@@ -30,3 +30,4 @@ void listSegments(char*pos,int depth);
 void move(char f1[], char f2[]);
 void ls(char Opt[],char Pos[]);
 int changeDirectory(char * args[]);
+void copy(char f1[], char f2[]);

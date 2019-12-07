@@ -25,6 +25,9 @@ ex)
 2019.12.07 add command rm and show Warnings  -  By JW.CHOI & SH.SHOI
 2019.12.07 add command rmdir and show Warnings  -  By SH.CHOI & JW.CHOI
 2019.12.07 add command mv  - By JW.CHOI
+2019.12.08 add command mkdir  -  By SH.CHOI
+2019.12.08 add commanf ls  -  By JW.CHOI
+2019.12.08 add command cp
 
 */
 #include <stdio.h>
@@ -110,11 +113,13 @@ void ls(char Opt[],char Pos[]){
 
 	if(c_pid==0){//child
 		execvp(ls_args[0],ls_args);
+		exit(0);
 	}else if(c_pid>0) {   /* PARENT */
 
     		if( (pid = wait(&status)) < 0){
       			perror("wait");
-    		}
+    			_exit(1);
+		}
 
 
        }else{
@@ -123,26 +128,71 @@ void ls(char Opt[],char Pos[]){
 
 }
 
-
 void move(char f1[], char f2[]){
     int fd1,fd2;
     int r_size,w_size;
-    char buf[100];
-    fd1 = open(f1, O_RDONLY);
-    fd2 = open(f2, O_RDWR|O_CREAT|O_EXCL, 0664);
-   
-    r_size = read(fd1,buf,100);
-    w_size = write(fd2,buf,r_size);
-    while(r_size == 100)
-    {
-        r_size=read(fd1,buf,100);
-        w_size=write(fd2,buf,r_size);
+
+    int status;
+    pid_t c_pid,pid;
+    c_pid=fork();
+    if(c_pid==0){
+    	 char buf[100];
+	 fd1 = open(f1, O_RDONLY);
+    	 fd2 = open(f2, O_RDWR|O_CREAT|O_EXCL, 0664);
+
+    	 r_size = read(fd1,buf,100);
+    	 w_size = write(fd2,buf,r_size);
+    	 while(r_size == 100)
+    	 {
+         	r_size=read(fd1,buf,100);
+         	w_size=write(fd2,buf,r_size);
+    	 }
+
+    	 unlink(f1);
+	 exit(0);
+    }else if(c_pid>0){
+    	if((pid=wait(&status))<0){
+		perror("wait");
+		_exit(1);
+	}
+    }else{
+    	perror("fork failed\n");
     }
 
-    unlink(f1);
- 
+}
+
+void copy(char f1[], char f2[]){
+    int fd1,fd2;
+    int r_size,w_size;
+    int status;
+    pid_t c_pid,pid;
+    c_pid=fork();
+
+    if(c_pid==0){
+         char buf[100];
+         fd1 = open(f1, O_RDONLY);
+         fd2 = open(f2, O_RDWR|O_CREAT|O_EXCL, 0664);
+
+         r_size = read(fd1,buf,100);
+         w_size = write(f:d2,buf,r_size);
+         while(r_size == 100)
+         {
+                r_size=read(fd1,buf,100);
+                w_size=write(fd2,buf,r_size);
+         }
+
+	 exit(0);
+    }else if(c_pid>0){
+        if((pid=wait(&status))<0){
+                perror("wait");
+		_exit(1);
+        }
+    }else{
+        perror("fork failed\n");
+    }
 
 }
+
 
 /**
  * shell의 시작 회면을 인쇄하는 데 사용되는 method
@@ -546,7 +596,7 @@ int commandHandler(int argc,char * args[]){
 				if(result==0){
 					printf("\x1b[31m \nSucces File Remove");
 					printf("\x1b[0m \n");
-					system("ls");
+					ls(NULL,NULL);
 				}else printf("\x1b[31m Can't remove Dir");
 				      printf("\x1b[0m \n");
 			}
@@ -565,7 +615,7 @@ int commandHandler(int argc,char * args[]){
 			if(ans=='y'){
 				remove(args[1]);
 				printf("Succes Dir Remove\n");
-				system("ls");
+				ls(NULL,NULL);
 			}
 		}
 	}
@@ -595,7 +645,7 @@ int commandHandler(int argc,char * args[]){
 
 	//2019.12.08
         //'mkdir' command
-        else if(strcmp(args[0],"mkdc")==0){
+        else if(strcmp(args[0],"mkdir")==0){
                 if(argc<2){
                         printf("\x1b[31m Enter a directory name");
                         printf("\x1b[0m \n");
@@ -615,7 +665,11 @@ int commandHandler(int argc,char * args[]){
                         }
                 }
         }
-
+	//2019.12.08
+	//'cp'command
+	else if(strcmp(args[0],"cp")==0){
+		copy(args[1],args[2]);
+	}
 	// 'pwd' command는 현재 디랙토리를 print.
  	else if (strcmp(args[0],"pwd") == 0){
 		if (args[j] != NULL){
