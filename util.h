@@ -28,5 +28,5 @@ void signalHandler_child(int p);
 void signalHandler_int(int p);
 void listSegments(char*pos,int depth);
 void move(char f1[], char f2[]);
-
+void ls(char Opt[],char Pos[]);
 int changeDirectory(char * args[]);

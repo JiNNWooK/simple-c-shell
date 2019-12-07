@@ -100,6 +100,29 @@ void init(){
                 exit(EXIT_FAILURE);
         }
 }
+void ls(char Opt[],char Pos[]){
+	char* ls_args[3]={"ls",Opt,Pos};
+	int status;
+	pid_t c_pid,pid;
+	//printf("Ok");
+	//printf("\n%s,%s\n",ls_args[1],ls_args[2]);
+	c_pid=fork();
+
+	if(c_pid==0){//child
+		execvp(ls_args[0],ls_args);
+	}else if(c_pid>0) {   /* PARENT */
+
+    		if( (pid = wait(&status)) < 0){
+      			perror("wait");
+    		}
+
+
+       }else{
+    	perror("fork failed");
+       }
+
+}
+
 
 void move(char f1[], char f2[]){
     int fd1,fd2;
@@ -556,6 +579,18 @@ int commandHandler(int argc,char * args[]){
 		else{
 			move(args[1],args[2]);
 		}	
+	}
+	//2019.12.08
+	//'ls'command
+	
+	else if(strcmp(args[0],"ls")==0){
+		if(argc==1){
+			ls(NULL,NULL);
+		}else if (argc==2){
+			ls(args[1],NULL);
+		}else{
+			ls(args[1],args[2]);
+		}
 	}
 	// 'pwd' command는 현재 디랙토리를 print.
  	else if (strcmp(args[0],"pwd") == 0){
