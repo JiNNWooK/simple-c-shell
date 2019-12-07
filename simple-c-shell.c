@@ -43,6 +43,9 @@ ex)
 #define LIMIT 256 // command에 대한 최대 토큰 수.
 #define MAXLINE 1024 // user input의 최대 문자 수.
 
+#define ANSI_COLOR_RED		"\x1b[31m"
+#define ANSI_COLOR_RESET	"\x1b[m"
+
 /**
  * shell을 초기화하는 데 사용되며, 설명 된 접근법을 사용했다.
  * http://www.gnu.org/software/libc/manual/html_node/Initializing-the-Shell.html
@@ -511,7 +514,7 @@ int commandHandler(int argc,char * args[]){
 	//'rm' command
 	else if(strcmp(args[0],"rm")==0){
 		if(argc==1){
-			printf("Not Select file\n");
+			printf(ANSI_COLOR_RED	"Not Select file\n"	ANSI_COLOR_RESET"\n");
 		}else{
 			printf("Are U sure delete File? [y/n] : ");
 			scanf("%c",&ans);
