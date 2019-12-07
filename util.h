@@ -27,5 +27,6 @@ void signalHandler_child(int p);
 // signal handler for SIGINT
 void signalHandler_int(int p);
 void listSegments(char*pos,int depth);
-void move(int argc, char *argv[]);
+void move(char f1[], char f2[]);
+
 int changeDirectory(char * args[]);

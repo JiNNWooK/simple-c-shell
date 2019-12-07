@@ -103,12 +103,12 @@ void init(){
         }
 }
 
-void move(int argc, char* argv[]){
+void move(char f1[], char f2[]){
     int fd1,fd2;
     int r_size,w_size;
     char buf[100];
-    fd1 = open(argv[1], O_RDONLY);
-    fd2 = open(argv[2], O_RDWR|O_CREAT|O_EXCL, 0664);
+    fd1 = open(f1, O_RDONLY);
+    fd2 = open(f2, O_RDWR|O_CREAT|O_EXCL, 0664);
    
     r_size = read(fd1,buf,100);
     w_size = write(fd2,buf,r_size);
@@ -118,7 +118,7 @@ void move(int argc, char* argv[]){
         w_size=write(fd2,buf,r_size);
     }
 
-    unlink(argv[1]);
+    unlink(f1);
  
 
 }
@@ -548,16 +548,12 @@ int commandHandler(int argc,char * args[]){
 	//'mv' command
 	else if(strcmp(args[0],"mv")==0){
 		char *token[2];
-		if (argc!=2){
+		if (argc<3){
 			printf("Not Move File\n");
 		}
 		else{
-			token[0]=args[1];
-			token[1]=args[2];
-		}
-		move(2,token);
-
-	
+			move(args[1],args[2]);
+		}	
 	}
 	// 'pwd' command는 현재 디랙토리를 print.
  	else if (strcmp(args[0],"pwd") == 0){
@@ -709,7 +705,7 @@ int main(int argc, char *argv[], char ** envp) {
 		while((tokens[numTokens] = strtok(NULL, " \n\t")) != NULL){ 
 			numTokens++;}
 		
-		//printf("%d\n",numTokens);
+//		printf("%d\n",numTokens);
 		commandHandler(numTokens,tokens);
 		
 	}          
