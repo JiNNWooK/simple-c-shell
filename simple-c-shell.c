@@ -43,8 +43,6 @@ ex)
 #define LIMIT 256 // command에 대한 최대 토큰 수.
 #define MAXLINE 1024 // user input의 최대 문자 수.
 
-#define ANSI_COLOR_RED		"\x1b[31m"
-#define ANSI_COLOR_RESET	"\x1b[m"
 
 /**
  * shell을 초기화하는 데 사용되며, 설명 된 접근법을 사용했다.
@@ -514,16 +512,20 @@ int commandHandler(int argc,char * args[]){
 	//'rm' command
 	else if(strcmp(args[0],"rm")==0){
 		if(argc==1){
-			printf(ANSI_COLOR_RED	"Not Select file\n"	ANSI_COLOR_RESET"\n");
+			printf(" \x1b[31m Not Select file");
+			printf(" \x1b[0m \n");
 		}else{
-			printf("Are U sure delete File? [y/n] : ");
+			printf("\x1b[31m Are U sure delete File? [y/n] : ");
+			printf("\x1b[0m");
 			scanf("%c",&ans);
 			if(ans=='y'){
 				int result=unlink(args[1]);
 				if(result==0){
-					printf("\nSucces File Remove\n");
+					printf("\x1b[31m \nSucces File Remove");
+					printf("\x1b[0m \n");
 					system("ls");
-				}else printf("Can't remove Dir\n");
+				}else printf("\x1b[31m Can't remove Dir");
+				      printf("\x1b[0m \n");
 			}
 		}
 	}
