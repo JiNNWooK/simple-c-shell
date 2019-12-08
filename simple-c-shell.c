@@ -31,7 +31,6 @@ ex)
 2019.12.08 add command touch  -  By JW.CHOI
 2019.12.08 add command sleep  -  By JW.CHOI
 
-
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -399,7 +398,7 @@ void fileIO(char * args[], char* inputFile, char* outputFile, int option){
 	int fileDescriptor; // 0~19 사이, output 또는 input파일 설명.
 	
 	if((pid=fork())==-1){
-		printf("Child process could not be created\n");
+		printf("\e[31m" "Child process could not be created" "\e[m" "\n");
 		return;
 	}
 	if(pid==0){
@@ -508,7 +507,7 @@ void pipeHandler(char * args[]){
 					close(filedes2[1]); // for even i
 				} 
 			}			
-			printf("Child process could not be created\n");
+			printf("\e[31m" "Child process could not be created" "\e[m" "\n");
 			return;
 		}
 		if(pid==0){
@@ -612,20 +611,16 @@ int commandHandler(int argc,char * args[]){
 	//'rm' command
 	else if(strcmp(args[0],"rm")==0){
 		if(argc==1){
-			printf(" \x1b[31m Not Select file");
-			printf(" \x1b[0m \n");
+			printf("\e[31m" " Not Select file" "\e[m" "\n");
 		}else{
-			printf("\x1b[31m Are U sure delete File? [y/n] : ");
-			printf("\x1b[0m");
+			printf("\e[31m" "Are U sure delete File? [y/n] : " "\e[m");
 			scanf("%c",&ans);
 			if(ans=='y'){
 				int result=unlink(args[1]);
 				if(result==0){
-					printf("\x1b[31m \nSucces File Remove");
-					printf("\x1b[0m \n");
+					printf("\n" "\e[32m" "Succes File Remove" "\e[m" "\n");
 					ls(NULL,NULL);
-				}else printf("\x1b[31m Can't remove Dir");
-				      printf("\x1b[0m \n");
+				}else printf("\e[31m" "Can't remove Dir" "\e[m" "\n");
 			}
 		}
 	}
@@ -634,14 +629,14 @@ int commandHandler(int argc,char * args[]){
 	//'rmdir' command
 	else if(strcmp(args[0],"rmdir")==0){
 		if(argc==1){
-			printf("Not Select Directory\n");
+			printf("\e[31m" "Not Select Directory" "\e[m"  "\n");
 		}else{ 
 			
-			printf("Are U sure delete Dir? [y/n] : ");
+			printf("\e[31m" "Are U sure delete Dir? [y/n] : " "\e[m");
 			scanf("%c",&ans);
 			if(ans=='y'){
 				remove(args[1]);
-				printf("Succes Dir Remove\n");
+				printf("\e[32m" "Succes Dir Remove" "\e[m" "\n");
 				ls(NULL,NULL);
 			}
 		}
@@ -651,7 +646,7 @@ int commandHandler(int argc,char * args[]){
 	else if(strcmp(args[0],"mv")==0){
 		char *token[2];
 		if (argc<3){
-			printf("Not Move File\n");
+			printf("\e[31m" "Not Move File" "\e[m" "\n");
 		}
 		else{
 			move(args[1],args[2]);
@@ -672,21 +667,20 @@ int commandHandler(int argc,char * args[]){
         //'mkdir' command
         else if(strcmp(args[0],"mkdir")==0){
                 if(argc<2){
-                        printf("\x1b[31m Enter a directory name");
-                        printf("\x1b[0m \n");
+                        printf("\e[31m" "Enter a directory name" "\e[m" "\n");
                 }else{
 
-                        printf("\x1b[31m Do you want to change the directory?[Y/N] \x1b[0m");
+                        printf("\e[31m" "Do you want to change the directory?[Y/N]" "\e[m");
                         scanf("%c",&ans);
 
                         if(ans=='n'){
                                 mkdir(args[1],0755);
-                                printf("Success mkdir\n");
+                                printf("\e[32m" "Success mkdir" "\e[m" "\n");
                         }else
                         {
                                 mkdir(args[1],0755);
                                 changeDirectory(args);
-                                printf("Success mkdir & cd");
+                                printf("\e[31m" "Success mkdir & cd" "\e[m" "\n");
                         }
                 }
         }
@@ -699,8 +693,7 @@ int commandHandler(int argc,char * args[]){
         //'touch'command
         else if(strcmp(args[0],"touch")==0){
                 if(argc<2){
-			printf("\x1b[31m Not Input File name");
-			printf("\x1b[0m \n");
+			printf("\e[31m" "Not Input File name" "\e[m" "\n");
 
 		}else{
 			touch(args[1]);
@@ -711,7 +704,7 @@ int commandHandler(int argc,char * args[]){
 	//'sleep' command
 	else if(strcmp(args[0],"sleep")==0){
 		if(argc<2){
-			printf("Not Set Sleep time\n");
+			printf("\e[31m" "Not Set Sleep time" "\e[m" "\n");
 		}else{
 			sleep(atoi(args[1]));
 		}
@@ -782,11 +775,11 @@ int commandHandler(int argc,char * args[]){
 			}else if (strcmp(args[i],"<") == 0){
 				aux = i+1;
 				if (args[aux] == NULL || args[aux+1] == NULL || args[aux+2] == NULL ){
-					printf("Not enough input arguments\n");
+					printf("\e[31m" "Not enough input arguments" "\e[m" "\n");
 					return -1;
 				}else{
 					if (strcmp(args[aux+1],">") != 0){
-						printf("Usage: Expected '>' and found %s\n",args[aux+1]);
+						printf("\e[31m" "Usage: Expected '>' and found %s" "\e[m" "\n",args[aux+1]);
 						return -2;
 					}
 				}
@@ -798,7 +791,7 @@ int commandHandler(int argc,char * args[]){
 
 			else if (strcmp(args[i],">") == 0){
 				if (args[i+1] == NULL){
-					printf("Not enough input arguments\n");
+					printf("\e[31m" "Not enough input arguments" "\e[m" "\n");
 					return -1;
 				}
 				fileIO(args_aux,NULL,args[i+1],0);
