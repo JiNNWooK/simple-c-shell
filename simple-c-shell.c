@@ -28,7 +28,7 @@ ex)
 2019.12.08 add command mkdir  -  By SH.CHOI
 2019.12.08 add commanf ls  -  By JW.CHOI
 2019.12.08 add command cp
-
+2019.12.08 add command touch
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -155,6 +155,7 @@ void move(char f1[], char f2[]){
 		perror("wait");
 		_exit(1);
 	}
+	printf("Move Complete!\n");
     }else{
     	perror("fork failed\n");
     }
@@ -174,7 +175,7 @@ void copy(char f1[], char f2[]){
          fd2 = open(f2, O_RDWR|O_CREAT|O_EXCL, 0664);
 
          r_size = read(fd1,buf,100);
-         w_size = write(f:d2,buf,r_size);
+         w_size = write(fd2,buf,r_size);
          while(r_size == 100)
          {
                 r_size=read(fd1,buf,100);
@@ -187,11 +188,34 @@ void copy(char f1[], char f2[]){
                 perror("wait");
 		_exit(1);
         }
+	printf("Copy Complete\n");
     }else{
         perror("fork failed\n");
     }
 
 }
+//2019.12.08
+void touch(char f1[]){
+    int fd;
+    int status;
+    pid_t c_pid,pid;
+    c_pid=fork();
+    if(c_pid==0){
+         fd = open(f1, O_RDWR|O_CREAT|O_EXCL, 0664);
+	 close(fd);
+         exit(0);
+    }else if(c_pid>0){
+        if((pid=wait(&status))<0){
+                perror("wait");
+                _exit(1);
+        }
+        printf("Touch Complete\n");
+    }else{
+        perror("fork failed\n");
+    }
+
+}
+
 
 
 /**
@@ -632,7 +656,6 @@ int commandHandler(int argc,char * args[]){
 	}
 	//2019.12.08
 	//'ls'command
-	
 	else if(strcmp(args[0],"ls")==0){
 		if(argc==1){
 			ls(NULL,NULL);
@@ -642,7 +665,6 @@ int commandHandler(int argc,char * args[]){
 			ls(args[1],args[2]);
 		}
 	}
-
 	//2019.12.08
         //'mkdir' command
         else if(strcmp(args[0],"mkdir")==0){
@@ -670,6 +692,19 @@ int commandHandler(int argc,char * args[]){
 	else if(strcmp(args[0],"cp")==0){
 		copy(args[1],args[2]);
 	}
+	 //2019.12.08
+        //'touch'command
+        else if(strcmp(args[0],"touch")==0){
+                if(argc<2){
+			printf("\x1b[31m Not Input File name");
+			printf("\x1b[0m \n");
+
+		}else{
+			touch(args[1]);
+		}
+		
+        }
+
 	// 'pwd' command는 현재 디랙토리를 print.
  	else if (strcmp(args[0],"pwd") == 0){
 		if (args[j] != NULL){
