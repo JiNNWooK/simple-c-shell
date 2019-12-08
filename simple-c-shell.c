@@ -27,8 +27,11 @@ ex)
 2019.12.07 add command mv  - By JW.CHOI
 2019.12.08 add command mkdir  -  By SH.CHOI
 2019.12.08 add commanf ls  -  By JW.CHOI
-2019.12.08 add command cp
-2019.12.08 add command touch
+2019.12.08 add command cp   -  By JW.CHOI
+2019.12.08 add command touch  -  By JW.CHOI
+2019.12.08 add command sleep  -  By JW.CHOI
+
+
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -692,7 +695,7 @@ int commandHandler(int argc,char * args[]){
 	else if(strcmp(args[0],"cp")==0){
 		copy(args[1],args[2]);
 	}
-	 //2019.12.08
+	//2019.12.08
         //'touch'command
         else if(strcmp(args[0],"touch")==0){
                 if(argc<2){
@@ -704,7 +707,16 @@ int commandHandler(int argc,char * args[]){
 		}
 		
         }
+	//2019.12.08
+	//'sleep' command
+	else if(strcmp(args[0],"sleep")==0){
+		if(argc<2){
+			printf("Not Set Sleep time\n");
+		}else{
+			sleep(atoi(args[1]));
+		}
 
+	}
 	// 'pwd' command는 현재 디랙토리를 print.
  	else if (strcmp(args[0],"pwd") == 0){
 		if (args[j] != NULL){
