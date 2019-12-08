@@ -270,7 +270,7 @@ void shellPrompt(){
 	// prompt 를"<user>@<host> <cwd> >"형식으로 인쇄한다.
 	char hostn[1204] = "";
 	gethostname(hostn, sizeof(hostn));
-	printf("\n%s@%s %s > ", getenv("LOGNAME"), hostn, getcwd(currentDirectory, 1024));
+	printf("\n%s@""\e[34m""%s""\e[35m""%s > ""\e[m", getenv("LOGNAME"), hostn, getcwd(currentDirectory, 1024));
 }
 
 /**
