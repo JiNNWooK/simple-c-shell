@@ -30,7 +30,8 @@ ex)
 2019.12.08 add command cp   -  By JW.CHOI
 2019.12.08 add command touch  -  By JW.CHOI
 2019.12.08 add command sleep  -  By JW.CHOI
-
+2019.12.09 add command chmod  -  By JW.CHOI
+2019.12.09 add command chown  -  by JW.CHOI
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -44,6 +45,8 @@ ex)
 #include "util.h"
 #include <sys/stat.h>
 #include <dirent.h>
+#include <pwd.h>
+#include <grp.h>
 
 #define LIMIT 256 // command에 대한 최대 토큰 수.
 #define MAXLINE 1024 // user input의 최대 문자 수.
@@ -132,13 +135,15 @@ void ls(char Opt[],char Pos[]){
 
 void move(char f1[], char f2[]){
     int fd1,fd2;
-    int r_size,w_size;
 
     int status;
     pid_t c_pid,pid;
     c_pid=fork();
     if(c_pid==0){
-    	 char buf[100];
+	    int r_size=0;
+	    int w_size=0;
+
+	    char buf[100];
 	 fd1 = open(f1, O_RDONLY);
     	 fd2 = open(f2, O_RDWR|O_CREAT|O_EXCL, 0664);
 
@@ -166,7 +171,6 @@ void move(char f1[], char f2[]){
 
 void copy(char f1[], char f2[]){
     int fd1,fd2;
-    int r_size,w_size;
     int status;
     pid_t c_pid,pid;
     c_pid=fork();
@@ -176,8 +180,8 @@ void copy(char f1[], char f2[]){
          fd1 = open(f1, O_RDONLY);
          fd2 = open(f2, O_RDWR|O_CREAT|O_EXCL, 0664);
 
-         r_size = read(fd1,buf,100);
-         w_size = write(fd2,buf,r_size);
+         int r_size = read(fd1,buf,100);
+         int w_size = write(fd2,buf,r_size);
          while(r_size == 100)
          {
                 r_size=read(fd1,buf,100);
@@ -644,7 +648,6 @@ int commandHandler(int argc,char * args[]){
 	//2019.12.07
 	//'mv' command
 	else if(strcmp(args[0],"mv")==0){
-		char *token[2];
 		if (argc<3){
 			printf("\e[31m" "Not Move File" "\e[m" "\n");
 		}
@@ -710,6 +713,41 @@ int commandHandler(int argc,char * args[]){
 		}
 
 	}
+	//2019.12.09
+	//'chmod' command
+	else if(strcmp(args[0],"chmod")==0){
+ 		if(access(args[1],F_OK)!=0)
+    		{
+        		printf("%s is not existed\n",args[1]);
+        		return 1;
+		}	 
+    		int mode = 0;
+    		sscanf(args[2], "0%o",&mode);
+    		if(chmod(args[1],mode)!=0)
+    		{
+        		printf("fail change mode\n");
+    		}else{
+       			 printf("success change mode\n");
+    		}
+
+	}
+	//2019.12.09
+	//'chown' command
+	else if(strcmp(args[0],"chown")==0){
+	
+		struct passwd *u_info;
+		struct group *g_info;
+		if ( 0 != getuid()){
+   			printf( "Only change super user\n");
+      			return -1;
+   		}
+
+   		u_info = getpwnam(args[1]);
+		g_info=getgrnam(args[1]);
+		int ch=chown( args[2], u_info->pw_uid,g_info->gr_gid);
+   		if ( ch==-1)
+      			printf( "Fail change Own");
+		}
 	// 'pwd' command는 현재 디랙토리를 print.
  	else if (strcmp(args[0],"pwd") == 0){
 		if (args[j] != NULL){
