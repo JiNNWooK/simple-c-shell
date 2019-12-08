@@ -23,3 +23,6 @@ OpenSource Class Team Project
 Contributor
 > Jin-Wook CHOI
 > Soo Hyuck CHOI
+* we command add 'rm', 'rmdir','mv','mkdir','ls','cp','touch','sleep','chmod','chown'
+* total 10 command add -2019.12.09 04:12 AM-
+- - -
